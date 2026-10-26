@@ -15,6 +15,7 @@ import model.entities.Seller;
 public class SellerDaoJDBC implements SellerDao{
 
 	private Connection conn;
+	//
 	
 	public SellerDaoJDBC(Connection conn) {
 		this.conn = conn;
@@ -42,32 +43,38 @@ public class SellerDaoJDBC implements SellerDao{
 	public Seller findById(Integer id) {
 		PreparedStatement st = null;
 		ResultSet rs = null;
+		
 		try {
 			st = conn.prepareStatement(
 					"SELECT seller.*,department.Name as DepName "
 					+ "FROM seller INNER JOIN department "
 					+ "ON seller.DepartmentId = department.Id "
-					+ "WHERE seller.Id = ?"
-					);
+					+ "WHERE seller.Id = ?");
 			st.setInt(1, id);
 			rs = st.executeQuery();
+			//quando se faz uma consulta no ResultSet ele começa
+			//apontando para aposição 0 que não contém objetos
+			//se a consulta não retornar nenhum registro
+			//o if retorna falso e retorna null
 			if(rs.next()) {
 				Department dep = instantiateDepartment(rs);
 				Seller obj = instantiateSeller(rs, dep);
 				return obj;
 			}
+			
 			return null;
 		}
 		catch(SQLException e) {
 			throw new DbException(e.getMessage());
 		}
-		finally {
+		finally{
 			DB.closeStatement(st);
 			DB.closeResultSet(rs);
 		}
 	}
-
-	private Seller instantiateSeller(ResultSet rs, Department dep) throws SQLException{
+	
+	
+	private Seller instantiateSeller(ResultSet rs, Department dep) throws SQLException {
 		Seller obj = new Seller();
 		obj.setId(rs.getInt("Id"));
 		obj.setName(rs.getString("Name"));
@@ -81,7 +88,9 @@ public class SellerDaoJDBC implements SellerDao{
 	private Department instantiateDepartment(ResultSet rs) throws SQLException {
 		Department dep = new Department();
 		dep.setId(rs.getInt("DepartmentId"));
-		dep.setName(rs.getString("DepName"));
+		//busca o id (int) na coluna DepartmentId retornada
+		//pelo ResultSet
+		dep.setName(rs.getString(("DepName")));
 		return dep;
 	}
 
